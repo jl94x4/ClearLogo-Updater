@@ -30,9 +30,9 @@ A command-line Python script that allows you to easily update the logo (often ca
     * Clone this repository:
         ```bash
         git clone https://github.com/jl94x4/ClearLogo-Updater.git
-        cd YOUR_REPOSITORY_NAME
+        cd ClearLogo-Updater
         ```
-    * Or, download the `plex_logo_updater.py` file directly.
+    * Or, download the `clearlogo.py` file directly.
 
 2.  **Install/Upgrade `plexapi`:**
     * Open your terminal or command prompt in the script's directory.
@@ -40,9 +40,10 @@ A command-line Python script that allows you to easily update the logo (often ca
         ```bash
         pip install --upgrade plexapi
         ```
+    * Or, run pip install -r requirements.txt
 
 3.  **Create Configuration File:**
-    * In the same directory as `plex_logo_updater.py`, create a file named `config.json`.
+    * In the same directory as `clearlogo.py`, create a file named `config.json`.
     * Add the following content to `config.json`:
         ```json
         {
@@ -50,6 +51,7 @@ A command-line Python script that allows you to easily update the logo (often ca
           "plex_token": "YOUR_PLEX_TOKEN_HERE"
         }
         ```
+    * Or, download config.json file directly and edit accordingly  
 
 4.  **Edit `config.json`:**
     * Replace `http://YOUR_PLEX_IP_OR_DOMAIN:32400` with the full URL to access your Plex server (including the port, usually 32400).
@@ -62,7 +64,7 @@ A command-line Python script that allows you to easily update the logo (often ca
 3.  Navigate (`cd`) to the directory where you saved `plex_logo_updater.py` and `config.json`.
 4.  Run the script using:
     ```bash
-    python plex_logo_updater.py
+    python clearlogo.py
     ```
 5.  Follow the interactive prompts:
     * The script will attempt to connect to your Plex server.
