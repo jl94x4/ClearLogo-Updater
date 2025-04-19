@@ -29,7 +29,7 @@ A command-line Python script that allows you to easily update the logo (often ca
 1.  **Get the script:**
     * Clone this repository:
         ```bash
-        git clone [https://github.com/YOUR_USERNAME/YOUR_REPOSITORY_NAME.git](https://github.com/YOUR_USERNAME/YOUR_REPOSITORY_NAME.git)
+        git clone https://github.com/jl94x4/ClearLogo-Updater.git
         cd YOUR_REPOSITORY_NAME
         ```
     * Or, download the `plex_logo_updater.py` file directly.
