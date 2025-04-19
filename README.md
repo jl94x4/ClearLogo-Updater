@@ -1,2 +1,91 @@
-# ClearLogo-Updater
-This tool allows you to update the Clear Logo for Plex, this logo is used on the new Plex Experience on Android Mobile and iOS. This script allows you to update them based on the show name and year, once you supply an image it will then update it accordingly.
+# Plex TV Show Logo Updater
+
+A command-line Python script that allows you to easily update the logo (often called ClearLogo) image for TV shows in your Plex Media Server library by providing an image URL. It uses the `plexapi` library and an interactive prompt system.
+
+![Screenshot Placeholder - Consider adding a screenshot of the script running]
+
+## Features
+
+* Interactive command-line interface.
+* Connects to your Plex server securely using URL and token.
+* Reads configuration from a simple `config.json` file (keeps your token out of the script).
+* Lists available TV Show libraries for easy selection.
+* Searches for TV shows by name and optional year within the chosen library.
+* Handles cases where multiple shows match the search.
+* Requires user confirmation before applying changes.
+* Updates the show's logo using a provided image URL via the `uploadLogo` method.
+* Loops automatically after success or failure, allowing updates to multiple shows in one session.
+* Basic error handling for connection, search, and upload issues.
+* Allows cancellation at various stages (Ctrl+C or pressing Enter at specific prompts).
+
+## Requirements
+
+* **Python 3.x:** (Developed with 3.12, should work on recent 3.x versions).
+* **`pip`:** Python package installer (usually included with Python).
+* **`plexapi` library:** Requires a **recent version** (e.g., 4.17.0 or later) that includes the `uploadLogo` method for `Show` objects.
+
+## Installation & Setup
+
+1.  **Get the script:**
+    * Clone this repository:
+        ```bash
+        git clone [https://github.com/YOUR_USERNAME/YOUR_REPOSITORY_NAME.git](https://github.com/YOUR_USERNAME/YOUR_REPOSITORY_NAME.git)
+        cd YOUR_REPOSITORY_NAME
+        ```
+    * Or, download the `plex_logo_updater.py` file directly.
+
+2.  **Install/Upgrade `plexapi`:**
+    * Open your terminal or command prompt in the script's directory.
+    * Run the following command to ensure you have a recent version:
+        ```bash
+        pip install --upgrade plexapi
+        ```
+
+3.  **Create Configuration File:**
+    * In the same directory as `plex_logo_updater.py`, create a file named `config.json`.
+    * Add the following content to `config.json`:
+        ```json
+        {
+          "plex_url": "http://YOUR_PLEX_IP_OR_DOMAIN:32400",
+          "plex_token": "YOUR_PLEX_TOKEN_HERE"
+        }
+        ```
+
+4.  **Edit `config.json`:**
+    * Replace `http://YOUR_PLEX_IP_OR_DOMAIN:32400` with the full URL to access your Plex server (including the port, usually 32400).
+    * Replace `YOUR_PLEX_TOKEN_HERE` with a valid Plex authentication token. You can find instructions here: [Finding an Authentication Token | Plex Support](https://support.plex.tv/articles/204059436-finding-an-authentication-token-x-plex-token/)
+
+## Usage
+
+1.  Make sure your Plex Media Server is running.
+2.  Open your terminal or command prompt.
+3.  Navigate (`cd`) to the directory where you saved `plex_logo_updater.py` and `config.json`.
+4.  Run the script using:
+    ```bash
+    python plex_logo_updater.py
+    ```
+5.  Follow the interactive prompts:
+    * The script will attempt to connect to your Plex server.
+    * It will list your TV Show libraries; enter the corresponding number. (Press Enter without typing a number to exit).
+    * Enter the name of the TV show you want to update. (Press Enter without typing a name to go back to library selection).
+    * Optionally, enter the release year of the show to refine the search.
+    * If a unique show is found, confirm it's the correct one (`y/n`). (Answering 'n' goes back to library selection).
+    * Enter the full URL (starting with `http://` or `https://`) of the logo image you want to apply. (Press Enter without typing a URL to cancel the update for this specific show).
+    * The script will attempt to upload the logo.
+    * After success or failure, it will ask if you want to update another logo (`y/n`). Answering 'n' will exit the script.
+
+## Important Notes
+
+* **`plexapi` Version:** This script critically depends on the `uploadLogo` method being available on `Show` objects in your installed `plexapi` version. Versions prior to approximately 4.16.0 or 4.17.0 (like 4.15.6) will **not** work and will produce an `AttributeError`. Always ensure `plexapi` is up-to-date (`pip install --upgrade plexapi`).
+* **Image URLs:** Provide direct URLs to valid image files (e.g., `.png`, `.jpg`). URLs pointing to web pages or unsupported formats will likely cause errors during the upload attempt (`BadRequest` error). The Plex server needs to be able to access and process the image from the URL.
+* **Plex Token:** Ensure the token used in `config.json` is valid and has permissions to edit metadata in your Plex library.
+
+## License
+
+This project is licensed under the MIT License - see the `LICENSE` file for details (or choose another license if you prefer).
+
+*(Consider adding a LICENSE file with the actual MIT License text if you choose it)*
+
+## Contributing
+
+Contributions are welcome! Please feel free to submit a pull request or open an issue if you find bugs or have suggestions for improvements.
