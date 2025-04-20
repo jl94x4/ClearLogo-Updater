@@ -4,7 +4,7 @@ A command-line Python script that allows you to easily update the logo (often ca
 
 ![image](https://github.com/user-attachments/assets/bf2c4051-c6bc-407b-aa5d-0ee3164bfd7c)
 
-![image](https://i.imgur.com/50pSzCI.jpeg)
+![image](https://imgur.com/ef914a11-e6b2-49cd-859c-7cc9f98d783d)
 
 ## Features
 
