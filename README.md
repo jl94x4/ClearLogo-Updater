@@ -2,8 +2,7 @@
 
 A command-line Python script that allows you to easily update the logo (often called ClearLogo) image for TV shows in your Plex Media Server library by providing an image URL. It uses the `plexapi` library and an interactive prompt system.
 
-![image](https://github.com/user-attachments/assets/bb4c08d6-e340-43d9-988c-a4520dac2fb7)
-
+![image](https://github.com/user-attachments/assets/bf2c4051-c6bc-407b-aa5d-0ee3164bfd7c)
 
 ## Features
 
