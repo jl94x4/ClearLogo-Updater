@@ -11,8 +11,7 @@ A command-line Python script that allows you to easily update the logo (often ca
 * Interactive command-line interface.
 * Connects to your Plex server securely using URL and token.
 * Reads configuration from a simple `config.json` file (keeps your token out of the script).
-* Lists available TV Show libraries for easy selection.
-* Searches for TV shows by name and optional year within the chosen library.
+* Searches for TV shows by name and optional year from all libraries.
 * Partial matches for Shows (e.g you can type just a part of show name (e.g., "Planet" for "Planet Earth") and it should find matching shows containing that text.)
 * Handles cases where multiple shows match the search.
 * Requires user confirmation before applying changes.
@@ -71,9 +70,8 @@ A command-line Python script that allows you to easily update the logo (often ca
     ```
 5.  Follow the interactive prompts:
     * The script will attempt to connect to your Plex server.
-    * It will list your TV Show libraries; enter the corresponding number. (Press Enter without typing a number to exit).
-    * Enter the name of the TV show you want to update. (Press Enter without typing a name to go back to library selection).
-    * Optionally, enter the release year of the show to refine the search.
+    * Enter the name of the TV show or Movie you want to update.
+    * Optionally, enter the release year of the show to refine the search. (significantly speeds up searching)
     * If a unique show is found, confirm it's the correct one (`y/n`). (Answering 'n' goes back to library selection).
     * Enter the full URL (starting with `http://` or `https://`) of the logo image you want to apply. (Press Enter without typing a URL to cancel the update for this specific show).
     * The script will attempt to upload the logo.
