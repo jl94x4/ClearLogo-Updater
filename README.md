@@ -62,7 +62,7 @@ A command-line Python script that allows you to easily update the logo (often ca
 
 1.  Make sure your Plex Media Server is running.
 2.  Open your terminal or command prompt.
-3.  Navigate (`cd`) to the directory where you saved `plex_logo_updater.py` and `config.json`.
+3.  Navigate (`cd`) to the directory where you saved `clearlogo.py` and `config.json`.
 4.  Run the script using:
     ```bash
     python clearlogo.py
