@@ -89,8 +89,6 @@ A command-line Python script that allows you to easily update the logo (often ca
 
 This project is licensed under the MIT License - see the `LICENSE` file for details (or choose another license if you prefer).
 
-*(Consider adding a LICENSE file with the actual MIT License text if you choose it)*
-
 ## Contributing
 
 Contributions are welcome! Please feel free to submit a pull request or open an issue if you find bugs or have suggestions for improvements.
