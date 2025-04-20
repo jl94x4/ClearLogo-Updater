@@ -82,11 +82,13 @@ def select_tv_section(plex):
             print("\nOperation cancelled by user.")
             return None # Return None on Ctrl+C
 
+# --- THIS FUNCTION IS UPDATED ---
 def find_and_confirm_show(section):
-    """Gets show name/year, searches Plex, and asks for confirmation."""
+    """Gets show name (allows partial), optional year, searches Plex using case-insensitive contains, and asks for confirmation.""" # Updated docstring
     while True:
         try:
-            show_name = input("Enter the TV show name (or press Enter to go back): ").strip()
+            # Update prompt to reflect partial matching is okay
+            show_name = input("Enter TV show name (partial name OK, Enter to go back): ").strip()
             if not show_name: # Allow returning to library selection
                 return None
             year_input = input("Enter the release year (optional, press Enter to skip): ").strip()
@@ -99,29 +101,25 @@ def find_and_confirm_show(section):
                     print("Invalid year format. Please enter a number or leave blank.")
                     continue
 
-            print(f"\nSearching for '{show_name}'" + (f" ({show_year})" if show_year else "") + f" in '{section.title}'...")
-            # Perform the search
-            results = section.search(title=show_name, year=show_year)
+            # --- Use case-insensitive contains search ---
+            print(f"\nSearching for shows containing '{show_name}'" + (f" ({show_year})" if show_year else "") + f" in '{section.title}'...")
+            # Build search keyword arguments
+            search_kwargs = {'title__icontains': show_name}
+            if show_year:
+                search_kwargs['year'] = show_year # Year still needs to be exact if provided
+            # Perform the search using the modified filter
+            results = section.search(**search_kwargs)
+            # --------------------------------------------
 
             # Handle search results
             if not results:
-                print("Show not found.")
+                print("No shows found containing those details.")
+                # Ask if user wants to try searching again (different terms)
                 if not ask_try_again("search again"):
-                     # If user doesn't want to search again, go back to library select
-                     return None
-                continue # Ask for input again
-            elif len(results) > 1:
-                print("\nFound multiple matches:")
-                for i, show in enumerate(results):
-                    # Safely get year attribute
-                    yr = getattr(show, 'year', "N/A")
-                    print(f"  {i + 1}. {show.title} ({yr})")
-                print("Refine search (e.g., add year or be more specific).")
-                if not ask_try_again("search again"):
-                    # If user doesn't want to search again, go back to library select
-                    return None
-                continue # Ask for input again
-            else: # Exactly one result
+                     return None # If not, return to library select
+                continue # If yes, loop back to ask for name/year
+
+            elif len(results) == 1: # Exactly one result, proceed to confirmation
                 target_show = results[0]
                 yr = getattr(target_show, 'year', "N/A")
                 print(f"\nFound show: {target_show.title} ({yr})")
@@ -132,15 +130,26 @@ def find_and_confirm_show(section):
                         return target_show # Return the confirmed show object
                     elif confirm == 'n':
                          print("Okay, show not confirmed.")
-                         # If user says no, go back to library select instead of re-searching immediately
+                         # If user says no, go back to library select
                          return None
-                         # break # Previous logic: Break confirmation loop to allow re-searching
                     else:
                         print("Please enter 'y' or 'n'.")
-                # Previous logic:
-                # If user said 'n' to confirmation
-                # if not ask_try_again("search again"): return None
-                # continue # Ask for input again (outer loop)
+
+            else: # Multiple results found
+                print(f"\nFound {len(results)} possible matches:")
+                # Display the matches found (limit display if desired, e.g., max 15)
+                for i, show in enumerate(results[:15]):
+                    yr = getattr(show, 'year', "N/A")
+                    print(f"  {i + 1}. {show.title} ({yr})")
+                if len(results) > 15:
+                    print(f"  ... and {len(results)-15} more.")
+
+                print("Multiple matches found. Please try to be more specific")
+                print("(e.g., add the year or more words from the title).")
+                # Ask if user wants to refine search terms
+                if not ask_try_again("refine your search"):
+                    return None # If not, return to library select
+                continue # If yes, loop back to ask for name/year
 
         # Handle potential errors during input/search
         except KeyboardInterrupt:
@@ -149,7 +158,6 @@ def find_and_confirm_show(section):
         except Exception as e:
             print(f"An unexpected error occurred during search: {e}")
             if not ask_try_again("search again"):
-                # If user doesn't want to retry after error, go back to library select
                  return None
             continue # Allow retrying search
 
