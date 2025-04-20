@@ -12,6 +12,7 @@ A command-line Python script that allows you to easily update the logo (often ca
 * Reads configuration from a simple `config.json` file (keeps your token out of the script).
 * Lists available TV Show libraries for easy selection.
 * Searches for TV shows by name and optional year within the chosen library.
+* Partial matches for Shows (e.g you can type just a part of show name (e.g., "Planet" for "Planet Earth") and it should find matching shows containing that text.)
 * Handles cases where multiple shows match the search.
 * Requires user confirmation before applying changes.
 * Updates the show's logo using a provided image URL via the `uploadLogo` method.
