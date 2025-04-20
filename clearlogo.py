@@ -8,6 +8,7 @@ from plexapi.exceptions import NotFound, BadRequest
 
 # --- Configuration ---
 CONFIG_FILE = 'config.json'
+MAX_SEARCH_RESULTS_DISPLAY = 30 # <<< Increased display limit for multiple results
 
 # --- Functions ---
 
@@ -44,44 +45,21 @@ def connect_plex(url, token):
         print("Check URL, token, server status, and network connection.")
         return None
 
-def select_media_section(plex):
-    """Lists Movie and TV show sections and lets the user select one."""
+# --- THIS FUNCTION IS UPDATED (Uses MAX_SEARCH_RESULTS_DISPLAY) ---
+def find_and_confirm_item(plex):
+    """Gets item name, searches ALL relevant libraries, allows selection from multiple results, proceeds directly after list selection."""
     try:
         media_sections = [s for s in plex.library.sections() if s.type in ('show', 'movie')]
+        if not media_sections:
+            print("Error: No Movie or TV Show libraries found on the server.")
+            return None
     except Exception as e:
         print(f"Error fetching library sections: {e}")
         return None
-    if not media_sections:
-        print("Error: No Movie or TV Show libraries found.")
-        return None
-
-    print("\nAvailable Movie and TV Show Libraries:")
-    for i, section in enumerate(media_sections):
-        print(f"{i + 1}: {section.title} ({section.type.capitalize()})")
 
     while True:
         try:
-            choice = input(f"Select the library number (1-{len(media_sections)}) (or press Enter to exit): ")
-            if not choice: return None
-            index = int(choice) - 1
-            if 0 <= index < len(media_sections):
-                selected_section = media_sections[index]
-                print(f"Selected library: '{selected_section.title}' ({selected_section.type.capitalize()})")
-                return selected_section
-            else:
-                print(f"Invalid choice (1-{len(media_sections)}).")
-        except ValueError:
-            print("Invalid input. Please enter a number.")
-        except KeyboardInterrupt:
-            print("\nOperation cancelled by user.")
-            return None
-
-# --- THIS FUNCTION IS UPDATED ---
-def find_and_confirm_item(section):
-    """Gets item name, searches Plex, allows selection from multiple results, confirms single results, and proceeds directly after list selection.""" # Updated docstring
-    while True:
-        try:
-            item_name = input("Enter Movie or TV Show name (partial name OK, Enter to go back): ").strip()
+            item_name = input("Enter Movie or TV Show name (partial name OK, Enter to exit): ").strip()
             if not item_name: return None
             year_input = input("Enter the release year (optional, press Enter to skip): ").strip()
             item_year = None
@@ -89,84 +67,93 @@ def find_and_confirm_item(section):
                 try: item_year = int(year_input)
                 except ValueError: print("Invalid year format."); continue
 
-            print(f"\nSearching for items containing '{item_name}'" + (f" ({item_year})" if item_year else "") + f" in '{section.title}'...")
+            print(f"\nSearching ALL Movie/TV libraries for items containing '{item_name}'" + (f" ({item_year})" if item_year else "") + "...")
+            all_results = []
             search_kwargs = {'title__icontains': item_name}
             if item_year: search_kwargs['year'] = item_year
-            results = section.search(**search_kwargs)
 
-            if not results:
-                print("No items found containing those details.")
-                if not ask_try_again("search again"): return None
+            print("Searching...")
+            for section in media_sections:
+                try:
+                    results_in_section = section.search(**search_kwargs)
+                    all_results.extend(results_in_section)
+                except Exception as e:
+                    print(f"Warning: Error searching library '{section.title}': {e}")
+                    continue
+            print("Search complete.")
+
+            if not all_results:
+                print("No items found matching those details in any relevant library.")
+                if not ask_try_again("search again with different terms"): return None
                 continue
 
-            elif len(results) == 1: # Exactly one result - KEEP Confirmation here
-                target_item = results[0]
+            elif len(all_results) == 1: # Exactly one result
+                target_item = all_results[0]
                 yr = getattr(target_item, 'year', "N/A")
                 item_type = getattr(target_item, 'type', 'Unknown').capitalize()
-                print(f"\nFound {item_type}: {target_item.title} ({yr})")
-                while True: # Confirmation loop for single result
+                library_title = "Unknown Library"
+                try: library_title = target_item.section().title
+                except Exception: pass
+                print(f"\nFound unique match: {target_item.title} ({yr}) [{item_type} in '{library_title}']")
+                while True:
                     confirm = input("Is this correct? (y/n): ").lower()
                     if confirm == 'y': return target_item
                     if confirm == 'n': print("Okay, item not confirmed."); return None
                     print("Please enter 'y' or 'n'.")
 
-            else: # --- Multiple results - REMOVED INNER CONFIRMATION ---
-                print(f"\nFound {len(results)} possible matches:")
-                max_display = 15
-                displayed_results = results[:max_display]
+            else: # Multiple results
+                print(f"\nFound {len(all_results)} possible matches across all libraries:")
+                # Use the constant for display limit
+                displayed_results = all_results[:MAX_SEARCH_RESULTS_DISPLAY]
 
                 for i, item in enumerate(displayed_results):
                     yr = getattr(item, 'year', "N/A")
                     item_type = getattr(item, 'type', 'Unknown').capitalize()
-                    print(f"  {i + 1}. {item.title} ({yr}) [{item_type}]")
-                if len(results) > max_display:
-                    print(f"  ... ({len(results) - max_display} more not shown)")
+                    library_title = "Unknown Library"
+                    try: library_title = item.section().title
+                    except Exception: pass
+                    print(f"  {i + 1}. {item.title} ({yr}) [{item_type} in '{library_title}']")
+
+                # Check if results were truncated based on the constant
+                if len(all_results) > MAX_SEARCH_RESULTS_DISPLAY:
+                    print(f"  ... ({len(all_results) - MAX_SEARCH_RESULTS_DISPLAY} more not shown)")
 
                 search_again_option_num = len(displayed_results) + 1
                 print(f"  {search_again_option_num}. Search Again / Refine Search")
 
-                # Loop to get a valid selection from the list
-                while True:
+                while True: # Loop for selection
                     try:
-                        choice_input = input(f"Select number (1-{search_again_option_num}) or press Enter to go back: ")
+                        choice_input = input(f"Select number (1-{search_again_option_num}) or press Enter to exit: ")
                         if not choice_input: return None
 
                         choice_num = int(choice_input)
 
                         if 1 <= choice_num <= len(displayed_results):
-                            # User selected a specific item from the list
                             selected_item = displayed_results[choice_num - 1]
                             yr = getattr(selected_item, 'year', "N/A")
                             item_type = getattr(selected_item, 'type', 'Unknown').capitalize()
-                            # Print selection, but proceed directly without asking for confirmation again
-                            print(f"\nYou selected: {selected_item.title} ({yr}) [{item_type}]")
-                            # --- Confirmation Removed ---
-                            return selected_item # Return the chosen item immediately
+                            library_title = "Unknown Library"
+                            try: library_title = selected_item.section().title
+                            except Exception: pass
+                            print(f"\nYou selected: {selected_item.title} ({yr}) [{item_type} in '{library_title}']")
+                            return selected_item # Return directly
 
                         elif choice_num == search_again_option_num:
-                            # User chose to search again
                             print("Okay, preparing to search again...")
                             break # Break selection loop to re-prompt search terms
 
                         else:
-                            # Input number was out of range
                             print(f"Invalid choice. Please enter a number between 1 and {search_again_option_num}.")
-                            # Loop continues to ask for selection number
 
-                    except ValueError:
-                        print("Invalid input. Please enter a number.")
-                    # Let KeyboardInterrupt be caught by the outer handler
+                    except ValueError: print("Invalid input. Please enter a number.")
 
-                # If the selection loop was broken (by choosing Search Again),
-                # continue the main outer loop to re-prompt for search terms
-                continue
-            # --- End of multiple results logic ---
+                continue # Continue outer loop if 'Search Again' was chosen
 
         except KeyboardInterrupt:
             print("\nOperation cancelled by user.")
             return None
         except Exception as e:
-            print(f"An unexpected error occurred during search: {e}")
+            print(f"An unexpected error occurred: {e}")
             if not ask_try_again("try again"): return None
             continue
 
@@ -191,11 +178,11 @@ def update_logo(item):
             print(f"Applying logo from {logo_url} to '{item.title}'...")
             item.uploadLogo(url=logo_url)
             print(f"Logo for '{item.title}' update command sent successfully!")
-            return True # Indicate success
+            return True
 
         except BadRequest as e:
             print(f"\nError applying logo: {e}")
-            print("This often means the URL was invalid, image format unsupported, or fetch failed.")
+            print("Check URL, image format, and server accessibility.")
             if not ask_try_again("try a different URL"): return False
 
         except AttributeError as e:
@@ -204,7 +191,6 @@ def update_logo(item):
                  print(f"\n*** Failed: It seems '{item_type}' objects might not support '.uploadLogo()' in your plexapi version. ***")
              else:
                  print(f"\nError during upload: {e}")
-                 print("\n*** AttributeError occurred. Please check your plexapi version. ***")
              return False
 
         except KeyboardInterrupt:
@@ -217,8 +203,8 @@ def update_logo(item):
 
 
 def main():
-    """Main execution function with loop, supporting Movies and TV Shows."""
-    print("--- Plex Logo Updater (Movies & TV Shows) ---")
+    """Main execution function with loop, searching across all relevant libraries."""
+    print("--- Plex Logo Updater (Movies & TV Shows - All Libraries) ---")
 
     plex_url, plex_token = load_config()
     if not plex_url or not plex_token: sys.exit(1)
@@ -228,18 +214,18 @@ def main():
 
     while True:
         print("\n" + "="*40)
-        print("Starting new update cycle...")
-        section = select_media_section(plex)
-        if not section: print("\nNo library selected or operation cancelled."); break
-        item = find_and_confirm_item(section)
-        if not item: print("\nNo item selected or confirmed, returning to library selection..."); continue
+        item = find_and_confirm_item(plex)
+        if not item:
+            print("\nNo item selected or operation cancelled.")
+            break
+
         success = update_logo(item)
         if success:
             print(f"\nLogo updated successfully for '{item.title}'.")
             if not ask_try_again("update another logo"): break
         else:
             print(f"\nLogo update did not complete for '{item.title}'.")
-            if not ask_try_again("try another update (select library/item)"): break
+            if not ask_try_again("try another update"): break
 
     print("\n--- Script Finished ---")
 
