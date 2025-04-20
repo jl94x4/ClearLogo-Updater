@@ -11,7 +11,7 @@ A command-line Python script that allows you to easily update the logo (often ca
 * Interactive command-line interface.
 * Connects to your Plex server securely using URL and token.
 * Reads configuration from a simple `config.json` file (keeps your token out of the script).
-* Searches for TV shows by name and optional year from all libraries.
+* Searches for TV shows and Movies by name and optional year from all libraries.
 * Partial matches for Shows (e.g you can type just a part of show name (e.g., "Planet" for "Planet Earth") and it should find matching shows containing that text.)
 * Handles cases where multiple shows match the search.
 * Requires user confirmation before applying changes.
