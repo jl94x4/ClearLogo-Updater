@@ -1,10 +1,13 @@
 # --- Imports ---
+import io
 import json
 import sys
 import plexapi
+import requests
 
 from plexapi.server import PlexServer
 from plexapi.exceptions import NotFound, BadRequest
+from PIL import Image
 
 # --- Configuration ---
 CONFIG_FILE = 'config.json'
@@ -21,17 +24,17 @@ def load_config():
         plex_token = config_data.get('plex_token')
         if not plex_url or not plex_token or plex_token == 'YOUR_PLEX_TOKEN_HERE':
              print(f"Error: Ensure 'plex_url' and 'plex_token' are correctly set in {CONFIG_FILE}.")
-             return None, None
-        return plex_url, plex_token
+             return None
+        return config_data
     except FileNotFoundError:
         print(f"Error: Configuration file '{CONFIG_FILE}' not found.")
-        return None, None
+        return None
     except json.JSONDecodeError:
         print(f"Error: Could not decode JSON from '{CONFIG_FILE}'. Check format.")
-        return None, None
+        return None
     except Exception as e:
         print(f"An unexpected error occurred reading config: {e}")
-        return None, None
+        return None
 
 def connect_plex(url, token):
     """Connects to the Plex server."""
@@ -166,7 +169,52 @@ def ask_try_again(action="try again"):
         if retry == 'n': print(f"Okay, cancelling {action}."); return False
         print("Please enter 'y' or 'n'.")
 
-def update_logo(item):
+def convert_logo_to_white(logo_url):
+
+    print(f"Converting logo from {logo_url} to all white...")
+
+    """Download the image into memory"""
+    response = requests.get(logo_url)
+    response.raise_for_status()
+
+    """Open the image with Pillow"""
+    image = Image.open(io.BytesIO(response.content)).convert("RGBA")
+    pixels = image.load()
+
+    """Convert all visible pixels to white"""
+    for y in range(image.height):
+        for x in range(image.width):
+            r, g, b, a = pixels[x, y]
+            if a != 0:
+                pixels[x, y] = (255, 255, 255, a)
+
+    """Save the image to a buffer"""
+    buffer = io.BytesIO()
+    image.save(buffer, format="PNG")
+    buffer.seek(0)
+
+    return buffer
+
+
+def resolve_convert_white(config):
+    value = config.get("convert_white", "n")
+    if value in ("yes", "y"):
+        return True
+    elif value in ("no", "n"):
+        return False
+    elif value == "ask":
+        while True:
+            response = input(f"Do you wish to convert this logo to white? (y/n): ").strip().lower()
+            if response == "y":
+                return True
+            if response == "n":
+                return False
+            print("Please enter 'y' or 'n'.")
+    else:
+        raise ValueError(f"Invalid 'convert_white' config value: {value}")
+
+
+def update_logo(item, config):
     """Asks for logo URL and applies it using item.uploadLogo(). Returns True on success, False otherwise."""
     while True:
         try:
@@ -175,8 +223,16 @@ def update_logo(item):
             if not logo_url.lower().startswith(('http://', 'https://')):
                  print("Invalid URL format."); continue
 
-            print(f"Applying logo from {logo_url} to '{item.title}'...")
-            item.uploadLogo(url=logo_url)
+            convert_white = resolve_convert_white(config)
+
+            if convert_white:
+                buffer = convert_logo_to_white(logo_url)
+                print(f"Applying white converted logo from {logo_url} to '{item.title}'...")
+                item.uploadLogo(filepath=buffer)
+            else:
+                print(f"Applying logo from {logo_url} to '{item.title}'...")
+                item.uploadLogo(url=logo_url)
+
             print(f"Logo for '{item.title}' update command sent successfully!")
             return True
 
@@ -206,10 +262,10 @@ def main():
     """Main execution function with loop, searching across all relevant libraries."""
     print("--- Plex Logo Updater (Movies & TV Shows - All Libraries) ---")
 
-    plex_url, plex_token = load_config()
-    if not plex_url or not plex_token: sys.exit(1)
+    config = load_config()
+    if not config: sys.exit(1)
 
-    plex = connect_plex(plex_url, plex_token)
+    plex = connect_plex(config.get('plex_url'), config.get('plex_token'))
     if not plex: sys.exit(1)
 
     while True:
@@ -219,7 +275,7 @@ def main():
             print("\nNo item selected or operation cancelled.")
             break
 
-        success = update_logo(item)
+        success = update_logo(item, config)
         if success:
             print(f"\nLogo updated successfully for '{item.title}'.")
             if not ask_try_again("update another logo"): break
@@ -233,3 +289,4 @@ def main():
 # --- Script Entry Point ---
 if __name__ == "__main__":
     main()
+
