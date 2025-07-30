@@ -131,6 +131,9 @@ def main():
 
     print("\n🚀 Starting logo upload process...\n")
 
+    # sort the mapping by key length (descending) to match longer paths first
+    location_map = dict(sorted(location_map.items(), key=lambda item: len(item[0]), reverse=True))
+
     for section in plex.library.sections():
         if section.type not in ['movie', 'show']:
             continue
