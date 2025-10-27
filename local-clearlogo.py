@@ -18,13 +18,21 @@ UPLOAD_DELAY = 0.05                    # delay in seconds between uploads to avo
 # --- Functions ---
 
 def load_config():
-    """Loads Plex URL and Token from the JSON config file."""
+    """Loads Plex URL and Token from environment variables or a JSON config file."""
+    plex_url = os.environ.get('PLEX_URL')
+    plex_token = os.environ.get('PLEX_TOKEN')
+
+    if plex_url and plex_token:
+        print("✅ Loaded Plex credentials from environment variables.")
+        return plex_url, plex_token
+
+    print("⚠️  Environment variables not found, falling back to config.json...")
     try:
         with open(CONFIG_FILE, 'r') as f:
             config_data = json.load(f)
         plex_url = config_data.get('plex_url')
         plex_token = config_data.get('plex_token')
-        if not plex_url or not plex_token or plex_token == 'YOUR_plex_token_HERE':
+        if not plex_url or not plex_token or plex_token == 'YOUR_PLEX_TOKEN_HERE':
              print(f"❌ Error: Ensure 'plex_url' and 'plex_token' are correctly set in {CONFIG_FILE}.")
              return None, None
         return plex_url, plex_token
@@ -51,7 +59,7 @@ def connect_plex(url, token):
         return None
 
 def parse_args():
-    parser = argparse.ArgumentParser(description="Plex ClearLogo Updater")
+    parser = argparse.ArgumentParser(description="P Logo Updater")
     parser.add_argument('--verbose', '-v', action='store_true', help='Enable verbose output')
     parser.add_argument('--all', '-a', action='store_true', help='Upload images for all items (overrides existing logos)')
     parser.add_argument('--dry-run', '-d', action='store_true', help='Dry run (no changes will be made)')
@@ -66,7 +74,7 @@ def main():
     dry_run = args.dry_run
     clear_mapping = args.clear_mapping
 
-    print("--- Plex Logo Updater (Movies & TV Shows - All Libraries) ---")
+    print("--- P Logo Updater (Movies & TV Shows - All Libraries) ---")
 
     print("\n⚙️  Running with options:")
     print(f"  Verbose: {verbose}")

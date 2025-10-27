@@ -1,146 +1,95 @@
-# Plex ClearLogo Updater Scripts
+# P Logo Updater (Dockerized)
 
-This repository contains two Python scripts for updating ClearLogo (logo) images in your Plex Media Server:
+This tool automatically scans your Plex libraries and uploads clearlogo images to your movies and TV shows using the [fanart.tv](https://fanart.tv/) API.
 
-- **clearlogo.py**: Interactive, per-show/movie logo updater using image URLs.
-- **local-clearlogo.py**: Bulk updater that applies local logo image files to all Movies and TV Shows in your Plex libraries.
+## Features
 
----
+-   **Fully Automated:** Runs on a schedule to find and apply new clearlogos.
+-   **Fanart.tv Integration:** Fetches high-quality logos from a comprehensive database.
+-   **Accurate Matching:** Verifies logos against Plex metadata (title, year, and TVDB/TMDB ID) to ensure accuracy and prevent mismatches.
+-   **Smart Throttling:** Automatically adjusts API request speed based on your fanart.tv API key type (`free` or `paid`) to respect rate limits.
+-   **Simple Setup:** Uses Docker Compose for easy configuration and deployment.
 
-## Scripts Overview
+## Prerequisites
 
-### 1. `clearlogo.py` – Interactive Logo Updater
+-   [Docker](https://docs.docker.com/get-docker/)
+-   [Docker Compose](https://docs.docker.com/compose/install/)
+-   A free [fanart.tv API Key](https://fanart.tv/get-an-api-key/).
 
-A command-line Python script that allows you to easily update the logo (often called ClearLogo) image for TV shows or movies in your Plex Media Server library by providing an image URL. It uses the `plexapi` library and an interactive prompt system.
+## Setup
 
-![image](https://github.com/user-attachments/assets/bf2c4051-c6bc-407b-aa5d-0ee3164bfd7c)
-![image](https://i.imgur.com/nlSvSGi.jpeg)
+1.  **Clone the repository:**
+    ```bash
+    git clone https://github.com/your-username/p-logo-updater.git
+    cd p-logo-updater
+    ```
 
-#### Features
+2.  **Create the Configuration File:**
+    Create a file named `config.json` in the project root (`/home/ubuntu/appdata/p-logo-updater/config.json` if running from the user's appdata directory).
 
-* Interactive command-line interface.
-* Connects to your Plex server securely using URL and token.
-* Reads configuration from a simple `config.json` file (keeps your token out of the script).
-* Searches for TV shows and Movies by name and optional year from all libraries.
-* Partial matches for Shows (e.g., type "Planet" for "Planet Earth").
-* Handles cases where multiple shows match the search.
-* Requires user confirmation before applying changes.
-* Updates the show's logo using a provided image URL via the `uploadLogo` method.
-* Loops automatically after success or failure, allowing updates to multiple shows in one session.
-* Basic error handling for connection, search, and upload issues.
-* Allows cancellation at various stages (Ctrl+C or pressing Enter at specific prompts).
+3.  **Edit `config.json`:**
+    Add your Plex and fanart.tv credentials to the `config.json` file.
 
----
+    ```json
+    {
+        "plex_url": "YOUR_PLEX_URL",
+        "plex_token": "YOUR_PLEX_TOKEN",
+        "fanart_api_key": "YOUR_FANART_API_KEY",
+        "fanart_key_type": "free"
+    }
+    ```
+    -   `plex_url`: The full URL to your Plex server.
+    -   `plex_token`: Your Plex API token. [Find it here](https://support.plex.tv/articles/204059436-finding-an-authentication-token-x-plex-token/).
+    -   `fanart_api_key`: Your personal API key from fanart.tv.
+    -   `fanart_key_type`: Set to `"free"` (1s delay per request) or `"paid"` (0.5s delay per request) depending on your fanart.tv account status. Defaults to `"free"` if omitted.
 
-### 2. `local-clearlogo.py` – Bulk Local Logo Updater
+4.  **Configure `docker-compose.yml`:**
+    Open `docker-compose.yml` and map the path to your `config.json` file.
 
-A command-line Python script to **bulk update ClearLogo images for all Movies and TV Shows** in your Plex libraries using local image files. This script scans your media folders for `logo.png`, `logo.jpg`, `clearlogo.png`, or `clearlogo.jpg` files and uploads them to Plex for each matching item.
-
-#### Features
-
-* Bulk updates logos for all Movies and TV Shows in all Plex libraries.
-* Uses local image files (`logo.png`, `clearlogo.png`, etc.) found in your media folders.
-* Interactive mapping of Plex library paths to your local filesystem.
-* Supports a dry-run mode to preview changes without uploading.
-* Optionally uploads only missing logos, or overwrites all logos.
-* Verbose mode for detailed output, or progress bar for concise feedback.
-* Option to clear and rebuild the local mapping configuration.
-* Reads Plex connection info from `config.json`.
-* **Configurable upload delay** between logo uploads to avoid overwhelming your Plex server (see `UPLOAD_DELAY` in the script).
-
-#### Example Usage
-
-```bash
-python local-clearlogo.py --verbose --dry-run
-python local-clearlogo.py --all
-```
-
-**Parameters:**
-- `-v`, `--verbose` : Enable detailed output.
-- `-a`, `--all` : Upload images for all items (overwrite existing logos).
-- `-d`, `--dry-run` : Preview what would be changed, but make no changes.
-- `-c`, `--clear-mapping` : Clear the current mapping configuration file
-
----
-
-## Requirements
-
-* **Python 3.x:** (Developed with 3.12, should work on recent 3.x versions).
-* **`pip`:** Python package installer (usually included with Python).
-* **`plexapi` library:** Requires a **recent version** (e.g., 4.17.0 or later) that includes the `uploadLogo` method for `Show` objects.
-
----
-
-## Installation & Setup
-
-1.  **Get the scripts:**
-    * Clone this repository:
-        ```bash
-        git clone https://github.com/jl94x4/ClearLogo-Updater.git
-        cd ClearLogo-Updater
-        ```
-    * Or, download the `clearlogo.py` and/or `local-clearlogo.py` files directly.
-
-2.  **Install/Upgrade `plexapi`:**
-    * Open your terminal or command prompt in the script's directory.
-    * Run the following command to ensure you have a recent version:
-        ```bash
-        pip install --upgrade plexapi
-        ```
-    * Or, run `pip install -r requirements.txt`
-
-3.  **Create Configuration File:**
-    * In the same directory as the scripts, create a file named `config.json`:
-        ```json
-        {
-          "plex_url": "http://YOUR_PLEX_IP_OR_DOMAIN:32400",
-          "plex_token": "YOUR_PLEX_TOKEN_HERE"
-        }
-        ```
-    * Replace with your actual Plex URL and token.  
-      [How to find your Plex token](https://support.plex.tv/articles/204059436-finding-an-authentication-token-x-plex-token/)
-
----
+    ```yaml
+    volumes:
+      - /path/to/your/config.json:/app/config.json
+    ```
+    For example:
+    ```yaml
+    volumes:
+      - /home/ubuntu/appdata/p-logo-updater/config.json:/app/config.json
+    ```
 
 ## Usage
 
-### For `clearlogo.py` (Interactive):
+-   **Build and Start the Container:**
+    This command builds the image and starts the container in detached mode. The cron job will run the script automatically on the schedule defined in `docker-compose.yml`.
+    ```bash
+    docker-compose up --build -d
+    ```
 
-```bash
-python clearlogo.py
-```
-* Follow the prompts to search for a show/movie and provide a logo image URL.
+-   **View Logs:**
+    To see the output from the script (either from a scheduled run or a manual run):
+    ```bash
+    docker logs -f p-logo-updater
+    ```
 
-### For `local-clearlogo.py` (Bulk Local):
+-   **Run the Script Manually:**
+    To trigger the automatic logo update process immediately, you can execute the script inside the running container.
+    ```bash
+    docker exec p-logo-updater python /app/clearlogo.py
+    ```
+    You can also specify which libraries to scan by adding the `--libraries` argument, followed by the names of your libraries:
+    ```bash
+    docker exec p-logo-updater python /app/clearlogo.py --libraries "Movies" "TV Shows"
+    ```
 
-```bash
-python local-clearlogo.py [options]
-```
-* The first run will prompt you to map your Plex library folders to local folders.
-* The script will scan your libraries and upload logos from local files.
-* Use `--help` to see all options.
+## Configuration
 
----
+-   **Schedule:** You can change the cron schedule by editing the `CRON_SCHEDULE` environment variable in the `docker-compose.yml` file. The default is `0 3 * * *` (3:00 AM daily). Use [crontab.guru](https://crontab.guru/) to generate schedules.
+-   **Script Arguments:** You can pass arguments to the `clearlogo.py` script by editing the `ARGS` environment variable in `docker-compose.yml`. For example, to limit the script to specific libraries:
+    ```yaml
+    environment:
+      - CRON_SCHEDULE=0 3 * * *
+      - ARGS=--libraries "Movies" "TV Shows"
+    ```
 
-## Important Notes
+## Legacy Local-Only Script
 
-* **`plexapi` Version:** These scripts critically depend on the `uploadLogo` method being available on `Show` objects in your installed `plexapi` version. Versions prior to approximately 4.16.0 or 4.17.0 (like 4.15.6) will **not** work and will produce an `AttributeError`. Always ensure `plexapi` is up-to-date (`pip install --upgrade plexapi`).
-* **Plex Token:** Ensure the token used in `config.json` is valid and has permissions to edit metadata in your Plex library.
-* **Image URLs:** For `clearlogo.py`, provide direct URLs to valid image files (e.g., `.png`, `.jpg`). URLs pointing to web pages or unsupported formats will likely cause errors during the upload attempt (`BadRequest` error). The Plex server needs to be able to access and process the image from the URL.
-* **Image Files:** For `local-clearlogo.py`, ensure your logo images are named `logo.png`, `logo.jpg`, `clearlogo.png`, or `clearlogo.jpg` and are placed in the correct media folders.
-
-## Configuration Notes
-
-- **UPLOAD_DELAY:**  
-  The `local-clearlogo.py` script includes an `UPLOAD_DELAY` setting (default: `0.05` seconds) to pause briefly between each logo upload. This helps prevent overwhelming your Plex server with too many requests in a short time.  
-  You can adjust this value at the top of the script to increase or decrease the delay as needed for your server's performance.
-
----
-
-## License
-
-This project is licensed under the MIT License - see the `LICENSE` file for details.
-
-## Contributing
-
-Contributions are welcome! Please feel free to submit a pull request or open an issue if you find bugs or have suggestions for improvements.
+This project also contains `local-clearlogo.py`, a legacy script designed to work with local logo image files instead of the fanart.tv API. This script is no longer the default but is kept for users who prefer to manage their own logo files. To use it, you must update the `entrypoint` in `docker-compose.yml` to run `local-clearlogo.py` and configure local file volume mappings as described in previous versions of this README.

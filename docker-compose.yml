@@ -1,0 +1,17 @@
+version: '3.8'
+
+services:
+  p-logo-updater:
+    build: .
+    container_name: p-logo-updater
+    restart: unless-stopped
+    environment:
+      # Schedule for the cron job. Default is every day at 3:00 AM.
+      - CRON_SCHEDULE=0 3 * * *
+      # Optional arguments for the script, e.g., --libraries "Movies" "TV Shows"
+      - ARGS=
+    volumes:
+      # Map the path to your config.json file.
+      - ./config.json:/app/config.json
+entrypoint: |
+  sh -c 'echo "$CRON_SCHEDULE root /usr/local/bin/python /app/clearlogo.py $ARGS > /proc/1/fd/1 2>/proc/1/fd/2" > /etc/cron.d/p-logo-updater-cron && chmod 0644 /etc/cron.d/p-logo-updater-cron && cron -f'
