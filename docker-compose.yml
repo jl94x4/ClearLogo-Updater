@@ -6,12 +6,52 @@ services:
     container_name: p-logo-updater
     restart: unless-stopped
     environment:
-      # Schedule for the cron job. Default is every day at 3:00 AM.
+      # Schedule for the cron job (default: daily at 3:00 AM)
+      # Format: minute hour day month weekday
+      # Examples:
+      #   0 3 * * *     - Daily at 3:00 AM
+      #   0 */6 * * *   - Every 6 hours
+      #   0 0 * * 0     - Weekly on Sunday at midnight
       - CRON_SCHEDULE=0 3 * * *
-      # Optional arguments for the script, e.g., --libraries "Movies" "TV Shows"
+
+      # Script arguments (optional)
+      # Examples:
+      #   --libraries "Movies" "TV Shows"
+      #   --verbose
+      #   --force --collections
       - ARGS=
+
+      # Plex configuration (alternative to config.json)
+      # - PLEX_URL=http://YOUR_SERVER_URL:32400
+      # - PLEX_TOKEN=YOUR_PLEX_TOKEN
+      # - FANART_API_KEY=YOUR_FANART_API_KEY
+
     volumes:
-      # Map the path to your config.json file.
-      - ./config.json:/app/config.json
-entrypoint: |
-  sh -c 'echo "$CRON_SCHEDULE root /usr/local/bin/python /app/clearlogo.py $ARGS > /proc/1/fd/1 2>/proc/1/fd/2" > /etc/cron.d/p-logo-updater-cron && chmod 0644 /etc/cron.d/p-logo-updater-cron && cron -f'
+      # Configuration file
+      - ./config.json:/app/config.json:ro
+
+      # Data directory for database and logs
+      - ./data:/app/data
+
+      # Optional: Backups directory
+      # - ./backups:/app/backups
+
+    # Run as non-root user
+    user: "1000:1000"
+
+    # Cron entrypoint override
+    entrypoint: |
+      sh -c '
+        echo "Starting P Logo Updater v2.0..."
+        echo "$CRON_SCHEDULE python /app/clearlogo.py $ARGS > /proc/1/fd/1 2>/proc/1/fd/2" > /etc/cron.d/p-logo-updater-cron
+        chmod 0644 /etc/cron.d/p-logo-updater-cron
+        cron -f
+      '
+
+    # Health check
+    healthcheck:
+      test: ["CMD", "pgrep", "-f", "cron"]
+      interval: 60s
+      timeout: 10s
+      retries: 3
+      start_period: 10s

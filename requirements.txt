@@ -1,2 +1,18 @@
-plexapi
-requests
+# Core dependencies
+plexapi>=4.15.0
+requests>=2.31.0
+
+# Performance and reliability
+tenacity>=8.2.3
+tqdm>=4.66.0
+
+# Testing and code quality
+pytest>=7.4.3
+pytest-cov>=4.1.0
+pytest-mock>=3.12.0
+black>=23.12.0
+flake8>=6.1.0
+mypy>=1.7.1
+
+# Type stubs
+types-requests>=2.31.0

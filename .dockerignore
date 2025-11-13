@@ -1,6 +1,62 @@
+# Git files
 .git
 .gitignore
+.gitattributes
+
+# Documentation
+README.md
+*.md
+LICENSE
+
+# Docker files
 Dockerfile
 docker-compose.yml
-README.md
+.dockerignore
+
+# Development files
+.vscode
+.idea
+*.pyc
+__pycache__
+*.pyo
+*.pyd
+.Python
+*.so
+
+# Testing
+.pytest_cache
+.coverage
+htmlcov/
+.tox/
+*.cover
+coverage.xml
+
+# Configuration (should be mounted as volumes)
 config.json
+local-mapping.json
+
+# Data directories
+data/
+backups/
+*.db
+*.log
+
+# Build artifacts
+build/
+dist/
+*.egg-info/
+.eggs/
+
+# Environment
+.env
+.venv
+env/
+venv/
+ENV/
+
+# OS files
+.DS_Store
+Thumbs.db
+*.swp
+*.swo
+*~
