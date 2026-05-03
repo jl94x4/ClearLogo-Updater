@@ -53,13 +53,18 @@ A command-line Python script to **bulk update ClearLogo images for all Movies an
 ```bash
 python local-clearlogo.py --verbose --dry-run
 python local-clearlogo.py --all
+python local-clearlogo.py --search
+python local-clearlogo.py --search --max-results 15
 ```
 
 **Parameters:**
 - `-v`, `--verbose` : Enable detailed output.
 - `-a`, `--all` : Upload images for all items (overwrite existing logos).
 - `-d`, `--dry-run` : Preview what would be changed, but make no changes.
-- `-c`, `--clear-mapping` : Clear the current mapping configuration file
+- `-c`, `--clear-mapping` : Clear the current mapping configuration file.
+- `-s`, `--search` : Search for titles and upload logos for selected items.  
+  Prompts you to search for a specific title, select it from the results, and upload a logo from your local folder. You can select a single item or update all search results at once. Useful for targeted updates without running the default bulk process.
+- `-m`, `--max-results` : Maximum number of search results in search mode (default: 30).
 
 ---
 
